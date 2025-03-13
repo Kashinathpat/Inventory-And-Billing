@@ -1,0 +1,1 @@
+pyinstaller --noconfirm --onefile --windowed  --icon "src/ui/res/icon.ico" --name "InventoryBilling" --clean  src/main.py
