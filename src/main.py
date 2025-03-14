@@ -1,21 +1,26 @@
 import sys
+
 import qdarktheme
-from src.ui.login import Ui_MainWindow
-from PyQt6 import QtWidgets
-from PyQt6.QtWidgets import QApplication
+from PyQt6.QtWidgets import QApplication, QStackedWidget
+
+from src.app.HomeGUI import HomeGUI
+from src.app.LoginGUI import LoginGUI
 import src.ui.res
 
-
-class ProjectGUI(QtWidgets.QMainWindow, Ui_MainWindow):
-    def __init__(self, *args, **kwargs):
-        super(ProjectGUI, self).__init__(*args, **kwargs)
-        self.setupUi(self)
+class MainApp(QStackedWidget):
+    def __init__(self):
+        super().__init__()
+        self.login_window = LoginGUI(self)
+        self.home_window = HomeGUI(self)
+        self.addWidget(self.login_window)
+        self.addWidget(self.home_window)
+        self.setCurrentIndex(0)
 
 
 def main():
     app = QApplication(sys.argv)
-    qdarktheme.setup_theme()
-    window = ProjectGUI()
+    qdarktheme.setup_theme("light")
+    window = MainApp()
     window.show()
     sys.exit(app.exec())
 
