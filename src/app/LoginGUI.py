@@ -1,6 +1,8 @@
 from PyQt6 import QtWidgets
+from PyQt6.QtWidgets import QMessageBox
 
 from src.ui.login import Ui_MainWindow
+from src.utils.database import check_login
 
 
 class LoginGUI(QtWidgets.QMainWindow, Ui_MainWindow):
@@ -10,5 +12,14 @@ class LoginGUI(QtWidgets.QMainWindow, Ui_MainWindow):
         self.setupUi(self)
         self.loginPushButton.clicked.connect(self.login)
 
-    def login(self):
-        self.stacked_widget.setCurrentIndex(1)
+    def login(self) -> None:
+        user = self.userline.text()
+        passwd = self.passline.text()
+
+        res = check_login(user, passwd)
+        print([res])
+        if not res:
+            self.passline.setText("")
+            self.stacked_widget.setCurrentIndex(1)
+        else:
+            QMessageBox.information(self, "Information", str(res))
