@@ -12,7 +12,8 @@ from PyQt6 import QtCore, QtGui, QtWidgets
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
-        MainWindow.resize(1005, 574)
+        MainWindow.resize(1005, 630)
+        MainWindow.setMinimumSize(QtCore.QSize(0, 630))
         icon = QtGui.QIcon()
         icon.addPixmap(QtGui.QPixmap(":/icons/res/icon.ico"), QtGui.QIcon.Mode.Normal, QtGui.QIcon.State.Off)
         MainWindow.setWindowIcon(icon)
