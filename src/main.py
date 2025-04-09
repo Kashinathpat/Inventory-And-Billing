@@ -1,6 +1,7 @@
 import sys
 
 import qdarktheme
+from PyQt6 import QtGui
 from PyQt6.QtCore import QSettings
 from PyQt6.QtWidgets import QApplication, QStackedWidget
 
@@ -13,6 +14,9 @@ class MainApp(QStackedWidget):
         super().__init__()
         self.settings = QSettings("inventory")
         self.restore()
+        icon = QtGui.QIcon()
+        icon.addPixmap(QtGui.QPixmap(":/icons/res/icon.png"), QtGui.QIcon.Mode.Normal, QtGui.QIcon.State.Off)
+        self.setWindowIcon(icon)
         self.login_window = LoginGUI(self)
         self.home_window = HomeGUI(self)
         self.addWidget(self.login_window)
