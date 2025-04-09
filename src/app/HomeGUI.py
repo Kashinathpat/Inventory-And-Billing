@@ -2,8 +2,10 @@ import sys
 
 import qdarktheme
 from PyQt6 import QtWidgets
+from PyQt6.QtGui import QFont
 from PyQt6.QtWidgets import QApplication, QStackedWidget, QHeaderView, QTableWidgetItem, QPushButton, QMessageBox
 
+from src.app.BillWidget import BillWidget
 from src.app.ItemDialog import ItemDialog
 from src.ui.home import Ui_HomeWindow
 from src.utils.database import getInventoryData, addItem, deleteItem, updateItem
@@ -18,6 +20,9 @@ class HomeGUI(QtWidgets.QMainWindow, Ui_HomeWindow):
         self.tableData = []
         self.table.setEditTriggers(QtWidgets.QAbstractItemView.EditTrigger.NoEditTriggers)
         self.addRecordButton.clicked.connect(self.add_row)
+        layout = self.tabWidget.widget(1).layout()
+        layout.addWidget(BillWidget())
+        self.tabWidget.setCurrentIndex(1)
 
     def showEvent(self, event):
         super().showEvent(event)
@@ -25,6 +30,8 @@ class HomeGUI(QtWidgets.QMainWindow, Ui_HomeWindow):
         self.getTableData()
 
     def initTable(self):
+        table_font = QFont("Segoe UI", 9)
+        self.table.setFont(table_font)
         self.table.setColumnCount(6)
         self.table.setHorizontalHeaderLabels(["SKU", "Item Name", "Price", "Stock", "Update", "Delete"])
         self.table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)

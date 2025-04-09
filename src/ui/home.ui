@@ -84,6 +84,7 @@ QTabBar::tab {
        <attribute name="title">
         <string>Billing</string>
        </attribute>
+       <layout class="QVBoxLayout" name="verticalLayout_4"/>
       </widget>
      </widget>
     </item>

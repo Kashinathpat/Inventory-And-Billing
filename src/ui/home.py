@@ -54,6 +54,8 @@ class Ui_HomeWindow(object):
         self.tabWidget.addTab(self.inventoryTab, "")
         self.billingTab = QtWidgets.QWidget()
         self.billingTab.setObjectName("billingTab")
+        self.verticalLayout_4 = QtWidgets.QVBoxLayout(self.billingTab)
+        self.verticalLayout_4.setObjectName("verticalLayout_4")
         self.tabWidget.addTab(self.billingTab, "")
         self.verticalLayout.addWidget(self.tabWidget)
         self.horizontalLayout_2 = QtWidgets.QHBoxLayout()
