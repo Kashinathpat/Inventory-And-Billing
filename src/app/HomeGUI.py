@@ -14,7 +14,6 @@ class HomeGUI(QtWidgets.QMainWindow, Ui_HomeWindow):
         super().__init__()
         self.stacked_widget = stacked_widget
         self.setupUi(self)
-        self.stacked_widget.setWindowTitle("Home | Inventory and Billing")
         self.logoutPushButton.clicked.connect(self.logout)
         self.tableData = []
         self.table.setEditTriggers(QtWidgets.QAbstractItemView.EditTrigger.NoEditTriggers)
@@ -22,6 +21,7 @@ class HomeGUI(QtWidgets.QMainWindow, Ui_HomeWindow):
 
     def showEvent(self, event):
         super().showEvent(event)
+        self.stacked_widget.setWindowTitle("Home | Inventory and Billing")
         self.getTableData()
 
     def initTable(self):

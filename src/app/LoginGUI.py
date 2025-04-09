@@ -13,6 +13,10 @@ class LoginGUI(QtWidgets.QMainWindow, Ui_MainWindow):
         self.loginPushButton.clicked.connect(self.login)
         self.userline.setText(self.stacked_widget.settings.value("username", ''))
 
+    def showEvent(self, event):
+        super().showEvent(event)
+        self.stacked_widget.setWindowTitle("Login | Inventory and Billing")
+
     def login(self) -> None:
         user = self.userline.text()
         passwd = self.passline.text()
