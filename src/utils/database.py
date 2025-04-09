@@ -1,7 +1,13 @@
-from pymongo import MongoClient
-from bson.objectid import ObjectId
+import os
 
-client = MongoClient("mongodb+srv://root:admin@bookstore.q3yk8d3.mongodb.net/?retryWrites=true&w=majority&appName=BookStore")
+from bson.objectid import ObjectId
+from dotenv import load_dotenv
+from pymongo import MongoClient
+
+load_dotenv()
+mongo_uri = os.getenv("MONGO_URI")
+
+client = MongoClient(mongo_uri)
 db = client["Store"]
 collection = db["inventory"]
 userCollection = db["users"]
