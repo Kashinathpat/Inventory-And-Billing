@@ -4,8 +4,9 @@ import qdarktheme
 from PyQt6 import QtWidgets
 from PyQt6.QtWidgets import QApplication, QStackedWidget, QHeaderView, QTableWidgetItem, QPushButton
 
+from src.app.ItemDialog import ItemDialog
 from src.ui.home import Ui_HomeWindow
-from src.utils.database import getInventoryData
+from src.utils.database import getInventoryData, addItem
 
 
 class HomeGUI(QtWidgets.QMainWindow, Ui_HomeWindow):
@@ -16,20 +17,21 @@ class HomeGUI(QtWidgets.QMainWindow, Ui_HomeWindow):
         self.stacked_widget.setWindowTitle("Home | Inventory and Billing")
         self.logoutPushButton.clicked.connect(self.logout)
         self.tableData = []
-        self.initTable()
         self.table.setEditTriggers(QtWidgets.QAbstractItemView.EditTrigger.NoEditTriggers)
+        self.addRecordButton.clicked.connect(self.add_row)
 
     def showEvent(self, event):
         super().showEvent(event)
         self.getTableData()
 
     def initTable(self):
-        self.addRecordButton.clicked.connect(self.add_row)
         self.table.setColumnCount(6)
         self.table.setHorizontalHeaderLabels(["SKU", "Item Name", "Price", "Stock", "Update", "Delete"])
         self.table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
 
     def getTableData(self):
+        self.table.clear()
+        self.initTable()
         self.tableData = getInventoryData()
         self.table.setRowCount(len(self.tableData))
 
@@ -56,7 +58,12 @@ class HomeGUI(QtWidgets.QMainWindow, Ui_HomeWindow):
         self.stacked_widget.setCurrentIndex(0)
 
     def add_row(self):
-        pass
+        dialog = ItemDialog(self)
+        if dialog.exec():
+            print("yes")
+            data = dialog.get_data()
+            addItem(data["name"], data["sku"], data["price"], data["stock"])
+            self.getTableData()
 
     def update_row(self, _id):
         pass
