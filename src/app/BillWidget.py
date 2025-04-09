@@ -3,7 +3,7 @@ import sys
 import qdarktheme
 from PyQt6 import QtWidgets
 from PyQt6.QtGui import QFont
-from PyQt6.QtWidgets import QApplication, QHeaderView
+from PyQt6.QtWidgets import QApplication, QHeaderView, QPushButton, QTableWidgetItem
 
 from src.ui.bill import Ui_BillWidget
 from src.utils.database import getInventoryData
@@ -41,10 +41,41 @@ class BillWidget(QtWidgets.QWidget, Ui_BillWidget):
     def setQuantity(self):
         selected = self.productComboBox.currentIndex()
         maxQuantity = self.tableData[selected]["stock"]
-        self.quantitySpinBox.setMaximum(maxQuantity)
+        if maxQuantity > 0:
+            self.quantitySpinBox.setRange(1, maxQuantity)
+            self.addToBillButton.setEnabled(True)
+            self.addToBillButton.setText("Add To Bill")
+        else:
+            self.quantitySpinBox.setRange(0, 0)
+            self.addToBillButton.setEnabled(False)
+            self.addToBillButton.setText("Add To Bill(Disabled as selected product have no Stock available)")
 
     def addToBill(self):
-        pass
+        selected = self.productComboBox.currentIndex()
+        data = self.tableData[selected]
+        quantity = self.quantitySpinBox.value()
+        data["stock"] -= quantity
+        self.setQuantity()
+        self.table.setRowCount(self.table.rowCount() + 1)
+
+        name = data["name"]
+        price = data["price"]
+        total = quantity * price
+
+        delete_btn = QPushButton("Delete")
+        delete_btn.clicked.connect(lambda _, btn=delete_btn: self.deleteRow(btn))
+        row = self.table.rowCount() - 1
+        self.table.setItem(row, 0, QTableWidgetItem(name))
+        self.table.setItem(row, 1, QTableWidgetItem(str(quantity)))
+        self.table.setItem(row, 2, QTableWidgetItem(str(price)))
+        self.table.setItem(row, 3, QTableWidgetItem(str(total)))
+        self.table.setCellWidget(row, 4, delete_btn)
+
+    def deleteRow(self, button):
+        for row in range(self.table.rowCount()):
+            if self.table.cellWidget(row, 4) == button:
+                self.table.removeRow(row)
+                break
 
     def calculateTotal(self):
         pass
