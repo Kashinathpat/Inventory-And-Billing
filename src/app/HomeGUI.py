@@ -6,7 +6,7 @@ from PyQt6.QtWidgets import QApplication, QStackedWidget, QHeaderView, QTableWid
 
 from src.app.ItemDialog import ItemDialog
 from src.ui.home import Ui_HomeWindow
-from src.utils.database import getInventoryData, addItem, deleteItem
+from src.utils.database import getInventoryData, addItem, deleteItem, updateItem
 
 
 class HomeGUI(QtWidgets.QMainWindow, Ui_HomeWindow):
@@ -75,7 +75,13 @@ class HomeGUI(QtWidgets.QMainWindow, Ui_HomeWindow):
             self.getTableData()
 
     def update_row(self, _id):
-        pass
+        data = [item for item in self.tableData if item["_id"] == _id][0]
+
+        dialog = ItemDialog(self, initial_data=data, is_update=True)
+        if dialog.exec():  # If user clicked 'Update'
+            updated_data = dialog.get_data()
+            updateItem(_id, updated_data["name"], updated_data["sku"], updated_data["price"], updated_data["stock"])
+            self.getTableData()
 
     def delete_row(self, _id):
         if self.confirm_action():
