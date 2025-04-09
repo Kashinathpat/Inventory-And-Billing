@@ -2,11 +2,11 @@ import sys
 
 import qdarktheme
 from PyQt6 import QtWidgets
-from PyQt6.QtWidgets import QApplication, QStackedWidget, QHeaderView, QTableWidgetItem, QPushButton
+from PyQt6.QtWidgets import QApplication, QStackedWidget, QHeaderView, QTableWidgetItem, QPushButton, QMessageBox
 
 from src.app.ItemDialog import ItemDialog
 from src.ui.home import Ui_HomeWindow
-from src.utils.database import getInventoryData, addItem
+from src.utils.database import getInventoryData, addItem, deleteItem
 
 
 class HomeGUI(QtWidgets.QMainWindow, Ui_HomeWindow):
@@ -57,6 +57,15 @@ class HomeGUI(QtWidgets.QMainWindow, Ui_HomeWindow):
     def logout(self):
         self.stacked_widget.setCurrentIndex(0)
 
+    def confirm_action(self):
+        reply = QMessageBox.question(
+            self,
+            "Confirm",
+            "Are you sure you want to proceed?",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
+        )
+        return reply == QMessageBox.StandardButton.Yes
+
     def add_row(self):
         dialog = ItemDialog(self)
         if dialog.exec():
@@ -69,7 +78,9 @@ class HomeGUI(QtWidgets.QMainWindow, Ui_HomeWindow):
         pass
 
     def delete_row(self, _id):
-        pass
+        if self.confirm_action():
+            deleteItem(_id)
+            self.getTableData()
 
 
 def main():
