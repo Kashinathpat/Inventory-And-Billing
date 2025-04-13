@@ -154,7 +154,7 @@ class BillWidget(QtWidgets.QWidget, Ui_BillWidget):
 
     def finalizeBill(self):
         if len(self.billData) == 0:
-            self.alert("Please add some products to bill first.")
+            return self.alert("Please add some products to bill first.")
         self.calculateTotal()
         pattern = r'^[6-9]\d{9}$'
         customerName = self.customerNameEdit.text()
