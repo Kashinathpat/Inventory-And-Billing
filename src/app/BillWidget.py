@@ -20,7 +20,7 @@ class BillWidget(QtWidgets.QWidget, Ui_BillWidget):
     def showEvent(self, event):
         super().showEvent(event)
         self.loadData()
-        self.setQuantity()
+        self.setQuantity(1)
         self.initTable()
 
     def listen(self):
@@ -45,17 +45,17 @@ class BillWidget(QtWidgets.QWidget, Ui_BillWidget):
         self.productComboBox.clear()
         self.productComboBox.addItems([f"{data['name']} : {data['sku']}" for data in self.tableData])
 
-    def setQuantity(self):
+    def setQuantity(self, minQuantity):
         selected = self.productComboBox.currentIndex()
         if selected == -1:
             return
         maxQuantity = int(self.tableData[selected]["stock"])
         if maxQuantity > 0:
-            self.quantitySpinBox.setRange(1, maxQuantity)
+            self.quantitySpinBox.setRange(-minQuantity, maxQuantity)
             self.addToBillButton.setEnabled(True)
             self.addToBillButton.setText("Add To Bill")
         else:
-            self.quantitySpinBox.setRange(0, 0)
+            self.quantitySpinBox.setRange(-minQuantity, 0)
             self.addToBillButton.setEnabled(False)
             self.addToBillButton.setText("Add To Bill(Disabled as selected product have no Stock available)")
 
@@ -63,6 +63,8 @@ class BillWidget(QtWidgets.QWidget, Ui_BillWidget):
         selected = self.productComboBox.currentIndex()
         data = self.tableData[selected]
         quantity = self.quantitySpinBox.value()
+        if quantity == 0:
+            return
 
         for btn, bill in self.billData.items():
             if bill["_id"] == data["_id"]:
@@ -71,7 +73,7 @@ class BillWidget(QtWidgets.QWidget, Ui_BillWidget):
                 bill["quantity"] = new_quantity
                 bill["stock"] -= quantity
                 bill["total"] = new_quantity * bill["price"]
-                self.setQuantity()
+                self.setQuantity(new_quantity)
                 index = self.table.indexAt(btn.pos()).row()
                 self.table.setItem(index, 1, QTableWidgetItem(str(new_quantity)))
                 self.table.setItem(index, 3, QTableWidgetItem(str(bill["total"])))
@@ -83,7 +85,7 @@ class BillWidget(QtWidgets.QWidget, Ui_BillWidget):
         total = quantity * data["price"]
         data["total"] = total
 
-        self.setQuantity()
+        self.setQuantity(quantity)
 
         delete_btn = QPushButton("Delete")
         delete_btn.clicked.connect(lambda _, btn=delete_btn: self.deleteRow(btn))
