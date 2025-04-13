@@ -22,7 +22,6 @@ class HomeGUI(QtWidgets.QMainWindow, Ui_HomeWindow):
         self.addRecordButton.clicked.connect(self.add_row)
         layout = self.tabWidget.widget(1).layout()
         layout.addWidget(BillWidget())
-        self.tabWidget.setCurrentIndex(1)
 
     def showEvent(self, event):
         super().showEvent(event)

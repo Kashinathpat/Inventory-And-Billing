@@ -47,6 +47,7 @@ class BillWidget(QtWidgets.QWidget, Ui_BillWidget):
         msg.setText("Invoice Created Successfully.")
         msg.addButton(QMessageBox.StandardButton.Cancel)
         open_location_button = msg.addButton("Open Invoice", QMessageBox.ButtonRole.ActionRole)
+        open_location_button.setDefault(True)
         msg.exec()
         if msg.clickedButton() == open_location_button:
             QDesktopServices.openUrl(QUrl.fromLocalFile(filepath))
@@ -152,6 +153,8 @@ class BillWidget(QtWidgets.QWidget, Ui_BillWidget):
             data.click()
 
     def finalizeBill(self):
+        if len(self.billData) == 0:
+            self.alert("Please add some products to bill first.")
         self.calculateTotal()
         pattern = r'^[6-9]\d{9}$'
         customerName = self.customerNameEdit.text()
@@ -169,7 +172,6 @@ class BillWidget(QtWidgets.QWidget, Ui_BillWidget):
             { "name": val["name"], "quantity": val["quantity"], "price": val["price"] }
             for val in self.billData.values()
         ]
-        print(self.billData.values())
         savePath = create_invoice(products, discount, tip, customerName, customerMobile)
         for val in self.billData.values():
             mongo_client.updateItem(val["_id"], val["name"], val["sku"], val["price"], val["stock"])

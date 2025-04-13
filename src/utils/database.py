@@ -1,5 +1,4 @@
 import os
-from typing import Union, List
 
 from bson.objectid import ObjectId
 from dotenv import load_dotenv
@@ -24,7 +23,7 @@ class MongoDBClient:
     def connect(self):
         """Attempts to connect to MongoDB with retries."""
         try:
-            self.client = MongoClient(self.uri, serverSelectionTimeoutMS=1000)
+            self.client = MongoClient(self.uri, serverSelectionTimeoutMS=3000)
             self.db = self.client[self.db_name]
             self.inventory = self.db["inventory"]
             self.users = self.db["users"]
