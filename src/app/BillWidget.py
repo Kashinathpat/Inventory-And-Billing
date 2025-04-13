@@ -14,6 +14,7 @@ class BillWidget(QtWidgets.QWidget, Ui_BillWidget):
         super().__init__()
         self.setupUi(self)
         self.tableData: list[dict] = []
+        self.billData = {}
         self.listen()
 
     def showEvent(self, event):
@@ -72,6 +73,7 @@ class BillWidget(QtWidgets.QWidget, Ui_BillWidget):
 
         delete_btn = QPushButton("Delete")
         delete_btn.clicked.connect(lambda _, btn=delete_btn: self.deleteRow(btn))
+        self.billData[delete_btn] = total
         row = self.table.rowCount() - 1
         self.table.setItem(row, 0, QTableWidgetItem(name))
         self.table.setItem(row, 1, QTableWidgetItem(str(quantity)))
@@ -80,13 +82,24 @@ class BillWidget(QtWidgets.QWidget, Ui_BillWidget):
         self.table.setCellWidget(row, 4, delete_btn)
 
     def deleteRow(self, button):
+        self.billData.pop(button)
         for row in range(self.table.rowCount()):
             if self.table.cellWidget(row, 4) == button:
                 self.table.removeRow(row)
                 break
 
     def calculateTotal(self):
-        pass
+        bill = sum(self.billData.values())
+        self.subtotalLabel.setText(str(bill))
+        discount = self.discountSpinBox.value()
+        tip = self.tipSpinBox.value()
+
+        discount = bill * (discount / 100)
+        after_discount = bill - discount
+        tip = after_discount * (tip / 100)
+        final_total = after_discount + tip
+
+        self.totalLabel.setText(str(final_total))
 
     def clearBill(self):
         pass
