@@ -3,10 +3,10 @@ import sys
 import qdarktheme
 from PyQt6 import QtWidgets
 from PyQt6.QtGui import QFont
-from PyQt6.QtWidgets import QApplication, QHeaderView, QPushButton, QTableWidgetItem
+from PyQt6.QtWidgets import QApplication, QHeaderView, QPushButton, QTableWidgetItem, QMessageBox
 
 from src.ui.bill import Ui_BillWidget
-from src.utils.database import getInventoryData
+from src.utils.database import mongo_client
 
 
 class BillWidget(QtWidgets.QWidget, Ui_BillWidget):
@@ -14,10 +14,13 @@ class BillWidget(QtWidgets.QWidget, Ui_BillWidget):
         super().__init__()
         self.setupUi(self)
         self.tableData: list[dict] = []
+        self.listen()
+
+    def showEvent(self, event):
+        super().showEvent(event)
         self.loadData()
         self.setQuantity()
         self.initTable()
-        self.listen()
 
     def listen(self):
         self.productComboBox.currentIndexChanged.connect(self.setQuantity)
@@ -34,13 +37,18 @@ class BillWidget(QtWidgets.QWidget, Ui_BillWidget):
 
     def loadData(self):
         self.table.clear()
-        self.tableData = getInventoryData()
+        self.tableData = mongo_client.get_inventory()
+        if isinstance(self.tableData, str):
+            QMessageBox.information(self, "Information", self.tableData)
+            self.tableData = []
         self.productComboBox.clear()
         self.productComboBox.addItems([f"{data['name']} : {data['sku']}" for data in self.tableData])
 
     def setQuantity(self):
         selected = self.productComboBox.currentIndex()
-        maxQuantity = self.tableData[selected]["stock"]
+        if selected == -1:
+            return
+        maxQuantity = int(self.tableData[selected]["stock"])
         if maxQuantity > 0:
             self.quantitySpinBox.setRange(1, maxQuantity)
             self.addToBillButton.setEnabled(True)

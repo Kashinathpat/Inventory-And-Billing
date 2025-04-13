@@ -8,7 +8,7 @@ from PyQt6.QtWidgets import QApplication, QStackedWidget, QHeaderView, QTableWid
 from src.app.BillWidget import BillWidget
 from src.app.ItemDialog import ItemDialog
 from src.ui.home import Ui_HomeWindow
-from src.utils.database import getInventoryData, addItem, deleteItem, updateItem
+from src.utils.database import mongo_client
 
 
 class HomeGUI(QtWidgets.QMainWindow, Ui_HomeWindow):
@@ -29,6 +29,9 @@ class HomeGUI(QtWidgets.QMainWindow, Ui_HomeWindow):
         self.stacked_widget.setWindowTitle("Home | Inventory and Billing")
         self.getTableData()
 
+    def alert(self, text: str) -> None:
+        QMessageBox.information(self, "Information", text)
+
     def initTable(self):
         table_font = QFont("Segoe UI", 9)
         self.table.setFont(table_font)
@@ -39,7 +42,10 @@ class HomeGUI(QtWidgets.QMainWindow, Ui_HomeWindow):
     def getTableData(self):
         self.table.clear()
         self.initTable()
-        self.tableData = getInventoryData()
+        self.tableData = mongo_client.get_inventory()
+        if isinstance(self.tableData, str):
+            self.alert(self.tableData)
+            self.tableData = []
         self.table.setRowCount(len(self.tableData))
 
         for row, val in enumerate(self.tableData):
@@ -75,24 +81,19 @@ class HomeGUI(QtWidgets.QMainWindow, Ui_HomeWindow):
 
     def add_row(self):
         dialog = ItemDialog(self)
-        if dialog.exec():
-            print("yes")
-            data = dialog.get_data()
-            addItem(data["name"], data["sku"], data["price"], data["stock"])
+        if dialog.exec() and not dialog.operation:
             self.getTableData()
 
     def update_row(self, _id):
         data = [item for item in self.tableData if item["_id"] == _id][0]
 
         dialog = ItemDialog(self, initial_data=data, is_update=True)
-        if dialog.exec():  # If user clicked 'Update'
-            updated_data = dialog.get_data()
-            updateItem(_id, updated_data["name"], updated_data["sku"], updated_data["price"], updated_data["stock"])
+        if dialog.exec() and not dialog.operation:
             self.getTableData()
 
     def delete_row(self, _id):
         if self.confirm_action():
-            deleteItem(_id)
+            mongo_client.deleteItem(_id)
             self.getTableData()
 
 

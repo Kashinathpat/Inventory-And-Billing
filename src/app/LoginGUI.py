@@ -2,7 +2,7 @@ from PyQt6 import QtWidgets
 from PyQt6.QtWidgets import QMessageBox
 
 from src.ui.login import Ui_MainWindow
-from src.utils.database import check_login
+from src.utils.database import mongo_client
 
 
 class LoginGUI(QtWidgets.QMainWindow, Ui_MainWindow):
@@ -21,7 +21,7 @@ class LoginGUI(QtWidgets.QMainWindow, Ui_MainWindow):
         user = self.userline.text()
         passwd = self.passline.text()
 
-        res = check_login(user, passwd)
+        res = mongo_client.check_login(user, passwd)
         if not res:
             self.passline.setText("")
             self.stacked_widget.settings.setValue("username", user)
