@@ -15,7 +15,6 @@ class ItemDialog(QDialog):
         layout = QVBoxLayout()
         form = QFormLayout()
 
-        self.operation = False
         self.is_update = is_update
         self._id = ""
         self.name_input = QLineEdit()
@@ -73,5 +72,5 @@ class ItemDialog(QDialog):
 
         if msg != "":
             self.parent().alert(msg)
-        self.operation = True
+            return
         self.accept()

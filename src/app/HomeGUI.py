@@ -81,14 +81,14 @@ class HomeGUI(QtWidgets.QMainWindow, Ui_HomeWindow):
 
     def add_row(self):
         dialog = ItemDialog(self)
-        if dialog.exec() and not dialog.operation:
+        if dialog.exec():
             self.getTableData()
 
     def update_row(self, _id):
         data = [item for item in self.tableData if item["_id"] == _id][0]
 
         dialog = ItemDialog(self, initial_data=data, is_update=True)
-        if dialog.exec() and not dialog.operation:
+        if dialog.exec():
             self.getTableData()
 
     def delete_row(self, _id):
