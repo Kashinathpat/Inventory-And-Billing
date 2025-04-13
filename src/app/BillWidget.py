@@ -27,11 +27,11 @@ class BillWidget(QtWidgets.QWidget, Ui_BillWidget):
     def showEvent(self, event):
         super().showEvent(event)
         self.loadData()
-        self.setQuantity(1)
+        self.setQuantity(-1)
         self.initTable()
 
     def listen(self):
-        self.productComboBox.currentIndexChanged.connect(self.setQuantity)
+        self.productComboBox.currentIndexChanged.connect(lambda: self.setQuantity(-1))
         self.addToBillButton.clicked.connect(self.addToBill)
         self.calculateBillButton.clicked.connect(self.calculateTotal)
         self.clearBillButton.clicked.connect(self.clearBill)
