@@ -70,6 +70,8 @@ class BillWidget(QtWidgets.QWidget, Ui_BillWidget):
             if bill["_id"] == data["_id"]:
                 old_quantity = bill.get("quantity", 0)
                 new_quantity = old_quantity + quantity
+                if new_quantity == 0:
+                    btn.click()
                 bill["quantity"] = new_quantity
                 bill["stock"] -= quantity
                 bill["total"] = new_quantity * bill["price"]
