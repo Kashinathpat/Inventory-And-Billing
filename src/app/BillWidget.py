@@ -63,22 +63,37 @@ class BillWidget(QtWidgets.QWidget, Ui_BillWidget):
         selected = self.productComboBox.currentIndex()
         data = self.tableData[selected]
         quantity = self.quantitySpinBox.value()
-        data["stock"] -= quantity
-        self.setQuantity()
-        self.table.setRowCount(self.table.rowCount() + 1)
 
-        name = data["name"]
-        price = data["price"]
-        total = quantity * price
+        for btn, bill in self.billData.items():
+            if bill["_id"] == data["_id"]:
+                old_quantity = bill.get("quantity", 0)
+                new_quantity = old_quantity + quantity
+                bill["quantity"] = new_quantity
+                bill["stock"] -= quantity
+                bill["total"] = new_quantity * bill["price"]
+                self.setQuantity()
+                index = self.table.indexAt(btn.pos()).row()
+                self.table.setItem(index, 1, QTableWidgetItem(str(new_quantity)))
+                self.table.setItem(index, 3, QTableWidgetItem(str(bill["total"])))
+                return
+
+        data = data.copy()
+        data["quantity"] = quantity
+        data["stock"] -= quantity
+        total = quantity * data["price"]
+        data["total"] = total
+
+        self.setQuantity()
 
         delete_btn = QPushButton("Delete")
         delete_btn.clicked.connect(lambda _, btn=delete_btn: self.deleteRow(btn))
         self.billData[delete_btn] = data
-        self.billData[delete_btn]["total"] = total
-        row = self.table.rowCount() - 1
-        self.table.setItem(row, 0, QTableWidgetItem(name))
+
+        row = self.table.rowCount()
+        self.table.setRowCount(row + 1)
+        self.table.setItem(row, 0, QTableWidgetItem(data["name"]))
         self.table.setItem(row, 1, QTableWidgetItem(str(quantity)))
-        self.table.setItem(row, 2, QTableWidgetItem(str(price)))
+        self.table.setItem(row, 2, QTableWidgetItem(str(data["price"])))
         self.table.setItem(row, 3, QTableWidgetItem(str(total)))
         self.table.setCellWidget(row, 4, delete_btn)
 
