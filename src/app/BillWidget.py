@@ -1,11 +1,14 @@
+import re
 import sys
 
 import qdarktheme
 from PyQt6 import QtWidgets
-from PyQt6.QtGui import QFont
+from PyQt6.QtCore import QRegularExpression, QUrl
+from PyQt6.QtGui import QFont, QRegularExpressionValidator, QDesktopServices
 from PyQt6.QtWidgets import QApplication, QHeaderView, QPushButton, QTableWidgetItem, QMessageBox
 
 from src.ui.bill import Ui_BillWidget
+from src.utils.invoice import create_invoice
 from src.utils.database import mongo_client
 
 
@@ -15,6 +18,10 @@ class BillWidget(QtWidgets.QWidget, Ui_BillWidget):
         self.setupUi(self)
         self.tableData: list[dict] = []
         self.billData = {}
+        regex = QRegularExpression(r"^[6-9]\d{0,9}$")
+        validator = QRegularExpressionValidator(regex)
+        self.customerMobileEdit.setValidator(validator)
+        self.finalizeBillButton.setText("Finalize Bill")
         self.listen()
 
     def showEvent(self, event):
@@ -28,6 +35,21 @@ class BillWidget(QtWidgets.QWidget, Ui_BillWidget):
         self.addToBillButton.clicked.connect(self.addToBill)
         self.calculateBillButton.clicked.connect(self.calculateTotal)
         self.clearBillButton.clicked.connect(self.clearBill)
+        self.finalizeBillButton.clicked.connect(self.finalizeBill)
+
+    def alert(self, msg):
+        QMessageBox.information(self, "Information", msg)
+
+    def completed(self, filepath: str):
+        msg = QMessageBox(self)
+        msg.setIcon(QMessageBox.Icon.Information)
+        msg.setWindowTitle("Information")
+        msg.setText("Invoice Created Successfully.")
+        msg.addButton(QMessageBox.StandardButton.Cancel)
+        open_location_button = msg.addButton("Open Invoice", QMessageBox.ButtonRole.ActionRole)
+        msg.exec()
+        if msg.clickedButton() == open_location_button:
+            QDesktopServices.openUrl(QUrl.fromLocalFile(filepath))
 
     def initTable(self):
         table_font = QFont("Segoe UI", 9)
@@ -40,7 +62,7 @@ class BillWidget(QtWidgets.QWidget, Ui_BillWidget):
         self.table.clear()
         self.tableData = mongo_client.get_inventory()
         if isinstance(self.tableData, str):
-            QMessageBox.information(self, "Information", self.tableData)
+            self.alert(self.tableData)
             self.tableData = []
         self.productComboBox.clear()
         self.productComboBox.addItems([f"{data['name']} : {data['sku']}" for data in self.tableData])
@@ -128,6 +150,31 @@ class BillWidget(QtWidgets.QWidget, Ui_BillWidget):
         self.tipSpinBox.setValue(0)
         for data in list(self.billData.keys()):
             data.click()
+
+    def finalizeBill(self):
+        self.calculateTotal()
+        pattern = r'^[6-9]\d{9}$'
+        customerName = self.customerNameEdit.text()
+        customerMobile = self.customerMobileEdit.text()
+        discount = self.discountSpinBox.value()
+        tip = self.tipSpinBox.value()
+
+        if not customerName or not customerMobile:
+            return self.alert("Customer name and mobile no. cannot be empty.")
+
+        if not re.fullmatch(pattern, customerMobile):
+            return self.alert("Please Enter valid Mobile Number.")
+
+        products = [
+            { "name": val["name"], "quantity": val["quantity"], "price": val["price"] }
+            for val in self.billData.values()
+        ]
+        print(self.billData.values())
+        savePath = create_invoice(products, discount, tip, customerName, customerMobile)
+        for val in self.billData.values():
+            mongo_client.updateItem(val["_id"], val["name"], val["sku"], val["price"], val["stock"])
+        self.completed(savePath)
+        self.clearBill()
 
 def main():
     app = QApplication(sys.argv)
