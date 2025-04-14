@@ -1,7 +1,8 @@
 import sys
 
 import qdarktheme
-from PyQt6 import QtWidgets
+from PyQt6 import QtWidgets, QtCore, QtGui
+from PyQt6.QtCore import QSettings
 from PyQt6.QtGui import QFont
 from PyQt6.QtWidgets import QApplication, QStackedWidget, QHeaderView, QTableWidgetItem, QPushButton, QMessageBox
 
@@ -14,6 +15,8 @@ from src.utils.database import mongo_client
 class HomeGUI(QtWidgets.QMainWindow, Ui_HomeWindow):
     def __init__(self, stacked_widget):
         super().__init__()
+        self.settings = QSettings("inventory")
+        self._font_size = self.settings.value("fontSize", 9)
         self.stacked_widget = stacked_widget
         self.setupUi(self)
         self.logoutPushButton.clicked.connect(self.logout)
@@ -22,20 +25,50 @@ class HomeGUI(QtWidgets.QMainWindow, Ui_HomeWindow):
         self.addRecordButton.clicked.connect(self.add_row)
         layout = self.tabWidget.widget(1).layout()
         layout.addWidget(BillWidget())
+        self.tabWidget.currentChanged.connect(self.fontSizeChange)
 
     def showEvent(self, event):
         super().showEvent(event)
         self.stacked_widget.setWindowTitle("Home | Inventory and Billing")
         self.getTableData()
 
+    def wheelEvent(self, event):
+        if event.modifiers() == QtCore.Qt.KeyboardModifier.ControlModifier:
+            delta = event.angleDelta().y()
+            if delta > 0:
+                self._font_size += 1
+            else:
+                self._font_size -= 1
+            self._font_size = max(8, min(20, self._font_size))
+            self.settings.setValue("fontSize", self._font_size)
+            self.fontSizeChange()
+            event.accept()
+        else:
+            super().wheelEvent(event)
+
+    def fontSizeChange(self):
+        if self.tabWidget.currentIndex() == 1:
+            bill_widget = self.tabWidget.widget(self.tabWidget.currentIndex()).layout().itemAt(0).widget()
+            if hasattr(bill_widget, "fontSizeChange"):
+                bill_widget.fontSizeChange()
+        self._font_size = self.settings.value("fontSize", 9)
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(self._font_size)
+        widgets = self.findChildren(QtWidgets.QPushButton)
+        [widget.setFont(font) for widget in widgets]
+        self.initTable()
+
     def alert(self, text: str) -> None:
         QMessageBox.information(self, "Information", text)
 
     def initTable(self):
-        table_font = QFont("Segoe UI", 9)
+        table_font = QFont("Segoe UI", self._font_size)
         self.table.setFont(table_font)
         self.table.setColumnCount(6)
         self.table.setHorizontalHeaderLabels(["SKU", "Item Name", "Price", "Stock", "Update", "Delete"])
+        self.table.resizeColumnsToContents()
+        self.table.resizeRowsToContents()
         self.table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
 
     def getTableData(self):

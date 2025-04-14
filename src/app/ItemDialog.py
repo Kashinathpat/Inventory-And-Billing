@@ -1,3 +1,5 @@
+from PyQt6 import QtWidgets, QtGui, QtCore
+from PyQt6.QtCore import QSettings
 from PyQt6.QtWidgets import (
     QDialog, QVBoxLayout, QFormLayout,
     QLineEdit, QPushButton, QHBoxLayout,
@@ -11,6 +13,8 @@ class ItemDialog(QDialog):
 
         self.setWindowTitle("Update Item" if is_update else "Add New Item")
         self.setMinimumWidth(300)
+        self.settings = QSettings("inventory")
+        self._font_size = self.settings.value("fontSize", 9)
 
         layout = QVBoxLayout()
         form = QFormLayout()
@@ -53,7 +57,36 @@ class ItemDialog(QDialog):
         self.confirm_button.setDefault(True)
 
         layout.addLayout(button_layout)
+        self.fontSizeChange()
         self.setLayout(layout)
+
+    def wheelEvent(self, event):
+        if event.modifiers() == QtCore.Qt.KeyboardModifier.ControlModifier:
+            delta = event.angleDelta().y()
+            if delta > 0:
+                self._font_size += 1
+            else:
+                self._font_size -= 1
+            self._font_size = max(8, min(20, self._font_size))
+            self.settings.setValue("fontSize", self._font_size)
+            self.fontSizeChange()
+            event.accept()
+        else:
+            super().wheelEvent(event)
+
+    def fontSizeChange(self):
+        self._font_size = self.settings.value("fontSize", 9)
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(self._font_size)
+        widgets = (
+                self.findChildren(QtWidgets.QLabel) +
+                self.findChildren(QtWidgets.QPushButton) +
+                self.findChildren(QtWidgets.QLineEdit) +
+                self.findChildren(QtWidgets.QSpinBox) +
+                self.findChildren(QtWidgets.QDoubleSpinBox)
+        )
+        [widget.setFont(font) for widget in widgets]
 
     def onSubmit(self):
         name = self.name_input.text().strip()

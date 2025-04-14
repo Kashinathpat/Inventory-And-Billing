@@ -2,8 +2,8 @@ import re
 import sys
 
 import qdarktheme
-from PyQt6 import QtWidgets
-from PyQt6.QtCore import QRegularExpression, QUrl
+from PyQt6 import QtWidgets, QtCore, QtGui
+from PyQt6.QtCore import QRegularExpression, QUrl, QSettings
 from PyQt6.QtGui import QFont, QRegularExpressionValidator, QDesktopServices
 from PyQt6.QtWidgets import QApplication, QHeaderView, QPushButton, QTableWidgetItem, QMessageBox
 
@@ -16,6 +16,8 @@ class BillWidget(QtWidgets.QWidget, Ui_BillWidget):
     def __init__(self):
         super().__init__()
         self.setupUi(self)
+        self.settings = QSettings("inventory")
+        self._font_size = self.settings.value("fontSize", 9)
         self.tableData: list[dict] = []
         self.billData = {}
         regex = QRegularExpression(r"^[6-9]\d{0,9}$")
@@ -26,8 +28,38 @@ class BillWidget(QtWidgets.QWidget, Ui_BillWidget):
 
     def showEvent(self, event):
         super().showEvent(event)
+        self._font_size = self.settings.value("fontSize", 9)
         self.loadData()
         self.setQuantity(-1)
+        self.initTable()
+
+    def wheelEvent(self, event):
+        if event.modifiers() == QtCore.Qt.KeyboardModifier.ControlModifier:
+            delta = event.angleDelta().y()
+            if delta > 0:
+                self._font_size += 1
+            else:
+                self._font_size -= 1
+            self._font_size = max(8, min(20, self._font_size))
+            self.settings.setValue("fontSize", self._font_size)
+            self.fontSizeChange()
+            event.accept()
+        else:
+            super().wheelEvent(event)
+
+    def fontSizeChange(self):
+        self._font_size = self.settings.value("fontSize", 9)
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(self._font_size)
+        widgets = (
+                self.findChildren(QtWidgets.QLabel) +
+                self.findChildren(QtWidgets.QPushButton) +
+                self.findChildren(QtWidgets.QLineEdit) +
+                self.findChildren(QtWidgets.QComboBox) +
+                self.findChildren(QtWidgets.QSpinBox)
+        )
+        [widget.setFont(font) for widget in widgets]
         self.initTable()
 
     def listen(self):
@@ -53,10 +85,12 @@ class BillWidget(QtWidgets.QWidget, Ui_BillWidget):
             QDesktopServices.openUrl(QUrl.fromLocalFile(filepath))
 
     def initTable(self):
-        table_font = QFont("Segoe UI", 9)
+        table_font = QFont("Segoe UI", self._font_size)
         self.table.setFont(table_font)
         self.table.setColumnCount(5)
         self.table.setHorizontalHeaderLabels(["Product", "Quantity", "Price", "Total", "Delete"])
+        self.table.resizeColumnsToContents()
+        self.table.resizeRowsToContents()
         self.table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
 
     def loadData(self):
